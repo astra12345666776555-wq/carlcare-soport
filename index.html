@@ -1,0 +1,1219 @@
+```html
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950 text-slate-100 font-sans select-none antialiased">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CarlCare & AnTuTu Hardware Security Diagnostics v10.0 ULTIMATE</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #090d16; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        
+        .grid-bg {
+            background-size: 32px 32px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+        }
+        
+        .crt-overlay::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 40;
+            background-size: 100% 3px, 6px 100%;
+            pointer-events: none;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        @keyframes toast-slide-in {
+            from { transform: translateY(-100%) scale(0.9); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .animate-toast { animation: toast-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        @keyframes shake-extreme {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            10% { transform: translate(-6px, -6px) rotate(-1.5deg); }
+            20% { transform: translate(6px, 6px) rotate(1.5deg); }
+            30% { transform: translate(-6px, 6px) rotate(0deg); }
+            40% { transform: translate(6px, -6px) rotate(1.5deg); }
+            50% { transform: translate(-6px, -6px) rotate(-1.5deg); }
+            60% { transform: translate(6px, 6px) rotate(0deg); }
+            70% { transform: translate(-6px, 6px) rotate(-1.5deg); }
+            80% { transform: translate(6px, -6px) rotate(1.5deg); }
+            90% { transform: translate(-6px, -6px) rotate(0deg); }
+        }
+        .animate-shake-extreme { animation: shake-extreme 0.2s ease-in-out infinite; }
+    </style>
+</head>
+<body class="h-full flex flex-col overflow-x-hidden grid-bg text-sm text-slate-100">
+
+    <!-- MODAL SECRETO DEL BROMISTA -->
+    <div id="secret-admin-modal" class="fixed inset-0 bg-slate-950/90 z-50 hidden flex-col items-center justify-center p-6 backdrop-blur-md">
+        <div class="bg-slate-900 border border-cyan-500/60 rounded-3xl p-6 max-w-sm w-full space-y-4 text-center shadow-2xl">
+            <div class="w-12 h-12 mx-auto rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-xl">
+                <i class="fa-solid fa-sliders"></i>
+            </div>
+            <h3 class="text-lg font-black text-white">Panel Secreto del Bromista 🎛️</h3>
+            <p class="text-xs text-slate-400">Personaliza los parámetros antes de mostrar la broma.</p>
+            
+            <div class="space-y-3 text-left">
+                <div>
+                    <label class="text-[10px] font-mono text-slate-400 uppercase">Nombre de la Víctima:</label>
+                    <input type="text" id="victim-name-input" placeholder="Ej: Carlos / Alejandro" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 mt-1">
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-mono text-slate-400 uppercase">Forzar Marca / Modelo:</label>
+                    <select id="force-model-select" onchange="forceDeviceModel(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 mt-1">
+                        <option value="">Auto-Detectar Dispositivo Real</option>
+                        <option value="Samsung Galaxy S24 Ultra">Samsung Galaxy S24 Ultra</option>
+                        <option value="Xiaomi 14 Pro 5G">Xiaomi 14 Pro 5G</option>
+                        <option value="POCO X6 Pro 5G">POCO X6 Pro 5G</option>
+                        <option value="Tecno Camon 30 Pro">Tecno Camon 30 Pro</option>
+                        <option value="Infinix Zero 30 5G">Infinix Zero 30 5G</option>
+                        <option value="Motorola Edge 50 Ultra">Motorola Edge 50 Ultra</option>
+                        <option value="Apple iPhone 15 Pro Max">Apple iPhone 15 Pro Max</option>
+                    </select>
+                </div>
+            </div>
+
+            <button onclick="startPanicSequence(); closeAdminModal();" class="w-full py-3.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-red-600/30 transition">
+                🚨 Detonar Alerta Roja Ahora
+            </button>
+            <button onclick="closeAdminModal()" class="w-full py-2 bg-slate-800 text-slate-300 font-semibold rounded-xl text-xs">
+                Cerrar y Guardar
+            </button>
+        </div>
+    </div>
+
+    <!-- PANTALLA COMPLETA DE TEST DE BURN-IN Y PIXELES -->
+    <div id="burnin-modal" class="fixed inset-0 z-50 bg-red-600 hidden items-center justify-center cursor-pointer" onclick="nextBurnInColor()">
+        <div id="burnin-text" class="bg-black/70 text-white px-6 py-3 rounded-2xl text-xs font-mono font-bold uppercase tracking-widest pointer-events-none border border-white/20">
+            Prueba de Píxeles: Toca la pantalla para cambiar de color
+        </div>
+    </div>
+
+    <!-- LOADER INICIAL HIPERREALISTA -->
+    <div id="initial-loader" class="fixed inset-0 bg-slate-950 z-50 flex flex-col items-center justify-center p-6 space-y-4">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-white text-3xl font-black shadow-2xl shadow-cyan-500/40 animate-pulse">
+            <i class="fa-solid fa-microchip"></i>
+        </div>
+        <div class="text-center space-y-1">
+            <h2 class="text-lg font-black text-white tracking-widest uppercase">CarlCare DiagPRO v10.0 ULTIMATE</h2>
+            <p id="loader-status-text" class="text-xs font-mono text-cyan-400">Consultando registros hardware de batería & GPU WebGL...</p>
+        </div>
+        <div class="w-64 bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-800 p-0.5">
+            <div id="loader-progress-bar" class="h-full bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full transition-all duration-300" style="width: 5%;"></div>
+        </div>
+        <span id="loader-pct" class="text-xs font-mono text-slate-500">5%</span>
+    </div>
+
+    <!-- HEADER SUPERIOR -->
+    <header class="w-full bg-slate-900/90 border-b border-slate-800 px-4 py-2.5 flex items-center justify-between sticky top-0 z-30 backdrop-blur-md">
+        <div class="flex items-center space-x-3">
+            <div id="logo-trigger" class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-white font-black shadow-lg shadow-cyan-500/25 cursor-pointer" title="Mantén presionado para opciones">
+                <i class="fa-solid fa-microchip text-base"></i>
+            </div>
+            <div>
+                <div class="flex items-center space-x-2">
+                    <span class="font-extrabold text-slate-100 tracking-tight text-sm uppercase">CarlCare <span class="text-cyan-400">DiagPRO</span></span>
+                    <span class="text-[10px] bg-cyan-950 text-cyan-300 border border-cyan-800/60 px-1.5 py-0.5 rounded font-mono font-bold">v10.0</span>
+                </div>
+                <div class="text-[11px] text-slate-400 flex items-center space-x-2">
+                    <span id="header-device-model" class="font-semibold text-slate-200">Detectando modelo...</span>
+                    <span>•</span>
+                    <span class="text-emerald-400 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> ONLINE</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <button id="btn-sound-toggle" onclick="toggleAudioMute()" class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition" title="Silenciar Audio">
+                <i id="sound-icon" class="fa-solid fa-volume-high text-cyan-400"></i>
+            </button>
+            <div class="text-right hidden sm:block font-mono">
+                <div id="live-clock" class="text-xs text-slate-200 font-semibold">00:00:00</div>
+                <div id="live-date" class="text-[10px] text-slate-400">--/--/----</div>
+            </div>
+        </div>
+    </header>
+
+    <div id="toast-container" class="fixed top-14 right-4 left-4 sm:left-auto z-40 flex flex-col space-y-2 max-w-sm w-full pointer-events-none"></div>
+
+    <!-- NAVEGACIÓN DE PESTAÑAS (CADA TEST CON PANTALLA EXCLUSIVA) -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-5 flex flex-col space-y-4 pb-20">
+        <div class="flex items-center bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800 overflow-x-auto space-x-1 shadow-inner">
+            <button onclick="switchTab('cpu')" id="tab-btn-cpu" class="tab-btn flex-1 min-w-[85px] py-2 px-3 rounded-xl font-semibold text-xs flex items-center justify-center space-x-1.5 transition bg-cyan-600 text-white shadow-md">
+                <i class="fa-solid fa-microchip"></i>
+                <span>CPU & RAM</span>
+            </button>
+            <button onclick="switchTab('battery')" id="tab-btn-battery" class="tab-btn flex-1 min-w-[85px] py-2 px-3 rounded-xl font-semibold text-xs flex items-center justify-center space-x-1.5 transition text-slate-400 hover:text-slate-200">
+                <i class="fa-solid fa-battery-three-quarters text-emerald-400"></i>
+                <span>Batería</span>
+            </button>
+            <button onclick="switchTab('audio')" id="tab-btn-audio" class="tab-btn flex-1 min-w-[85px] py-2 px-3 rounded-xl font-semibold text-xs flex items-center justify-center space-x-1.5 transition text-slate-400 hover:text-slate-200">
+                <i class="fa-solid fa-volume-high text-cyan-400"></i>
+                <span>Audio</span>
+            </button>
+            <button onclick="switchTab('screen')" id="tab-btn-screen" class="tab-btn flex-1 min-w-[85px] py-2 px-3 rounded-xl font-semibold text-xs flex items-center justify-center space-x-1.5 transition text-slate-400 hover:text-slate-200">
+                <i class="fa-solid fa-desktop text-purple-400"></i>
+                <span>Pantalla</span>
+            </button>
+            <button onclick="switchTab('sensors')" id="tab-btn-sensors" class="tab-btn flex-1 min-w-[85px] py-2 px-3 rounded-xl font-semibold text-xs flex items-center justify-center space-x-1.5 transition text-slate-400 hover:text-slate-200">
+                <i class="fa-solid fa-compass text-amber-400"></i>
+                <span>Sensores</span>
+            </button>
+            <button onclick="switchTab('antutu')" id="tab-btn-antutu" class="tab-btn flex-1 min-w-[85px] py-2 px-3 rounded-xl font-semibold text-xs flex items-center justify-center space-x-1.5 transition text-slate-400 hover:text-slate-200">
+                <i class="fa-solid fa-bolt text-yellow-400"></i>
+                <span>AnTuTu 3D</span>
+            </button>
+            <button onclick="switchTab('specs')" id="tab-btn-specs" class="tab-btn flex-1 min-w-[85px] py-2 px-3 rounded-xl font-semibold text-xs flex items-center justify-center space-x-1.5 transition text-slate-400 hover:text-slate-200">
+                <i class="fa-solid fa-circle-info text-blue-400"></i>
+                <span>Specs</span>
+            </button>
+            <button onclick="switchTab('security')" id="tab-btn-security" class="tab-btn flex-1 min-w-[85px] py-2 px-3 rounded-xl font-semibold text-xs flex items-center justify-center space-x-1.5 transition text-slate-400 hover:text-slate-200">
+                <i class="fa-solid fa-shield-halved text-red-400"></i>
+                <span>Seguridad</span>
+            </button>
+        </div>
+
+        <!-- 1. PESTAÑA COMPLETA: CPU Y PROCESADOR -->
+        <section id="tab-cpu" class="tab-content flex flex-col space-y-4">
+            <div class="glass-panel p-5 rounded-2xl border border-slate-800 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-microchip text-cyan-400"></i> Análisis de Procesador SoC
+                        </h2>
+                        <p class="text-xs text-slate-400">Frecuencias dinámicas por núcleo e hilos de ejecución.</p>
+                    </div>
+                    <span id="cpu-total-pct" class="font-mono text-lg font-black text-cyan-400">28%</span>
+                </div>
+                <div id="cpu-cores-container" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+            </div>
+
+            <div class="glass-panel p-5 rounded-2xl border border-slate-800 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wide flex items-center gap-2">
+                        <i class="fa-solid fa-memory text-purple-400"></i> Estado de Memoria RAM LPDDR5
+                    </h2>
+                    <span id="ram-pct-text" class="font-mono text-xs font-bold text-purple-400">64%</span>
+                </div>
+                <div class="w-full bg-slate-950 h-3 rounded-full overflow-hidden p-0.5 border border-slate-800">
+                    <div id="ram-bar" class="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-500" style="width: 64%;"></div>
+                </div>
+                <div class="text-xs text-slate-400 font-mono flex justify-between pt-1">
+                    <span>Memoria Total: <strong id="ram-total-val" class="text-slate-200">8 GB</strong></span>
+                    <span>En Uso: <strong id="ram-used-val" class="text-purple-400">5.1 GB</strong></span>
+                    <span>Libre: <strong id="ram-free-val" class="text-emerald-400">2.9 GB</strong></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. PESTAÑA COMPLETA: BATERÍA & SALUD REAL -->
+        <section id="tab-battery" class="tab-content hidden flex-col space-y-4">
+            <div class="glass-panel p-6 rounded-2xl border border-slate-800 space-y-5">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-2xl">
+                            <i class="fa-solid fa-battery-three-quarters"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-bold text-slate-100">Batería & Estado Térmico Real</h2>
+                            <p class="text-xs text-slate-400">Lectura directa obtenida vía Battery Status API.</p>
+                        </div>
+                    </div>
+                    <span id="battery-status-tag" class="text-xs bg-emerald-950 text-emerald-300 border border-emerald-800/80 px-3 py-1 rounded-full font-bold">ÓPTIMO</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl text-center space-y-1">
+                        <div class="text-xs text-slate-500 font-mono">NIVEL REAL DE BATERÍA</div>
+                        <div id="battery-level-pct" class="text-3xl font-black text-emerald-400 font-mono">--%</div>
+                        <div id="battery-charging-state" class="text-[10px] text-slate-400 font-mono">Leyendo sensor...</div>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl text-center space-y-1">
+                        <div class="text-xs text-slate-500 font-mono">TEMPERATURA ESTIMADA</div>
+                        <div id="battery-temp-val" class="text-3xl font-black text-amber-400 font-mono">33.5 °C</div>
+                        <div class="text-[10px] text-emerald-400 font-mono">Rango seguro (Normal)</div>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl text-center space-y-1">
+                        <div class="text-xs text-slate-500 font-mono">VOLTAJE / SALUD</div>
+                        <div class="text-3xl font-black text-cyan-400 font-mono">3.85 V</div>
+                        <div class="text-[10px] text-slate-400 font-mono">Salud: 99% (Excelente)</div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-xl space-y-2">
+                    <div class="text-xs font-bold text-slate-300 flex items-center justify-between">
+                        <span>Prueba Térmica de Carga Rápida (Fast Charge Scan)</span>
+                        <button onclick="runBatteryStressTest()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[11px] font-bold">Ejecutar Stress Test</button>
+                    </div>
+                    <p class="text-[11px] text-slate-400">Simula consumo de alto voltaje para verificar resistencia térmica del regulador de carga.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. PESTAÑA COMPLETA: AUDIO Y ALTAVOCES -->
+        <section id="tab-audio" class="tab-content hidden flex-col space-y-4">
+            <div class="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
+                <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-volume-high text-cyan-400"></i> Calibración & Test Frecuencial de Altavoces
+                </h2>
+                <p class="text-xs text-slate-400">Generador de ondas sintetizadas vía Web Audio API para detectar saturaciones.</p>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <button onclick="playTestSpeakerTone(440)" class="py-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold text-slate-200 space-y-1 text-center">
+                        <div class="text-cyan-400 text-lg"><i class="fa-solid fa-wave-square"></i></div>
+                        <div>440 Hz (Grave)</div>
+                    </button>
+                    <button onclick="playTestSpeakerTone(880)" class="py-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold text-slate-200 space-y-1 text-center">
+                        <div class="text-emerald-400 text-lg"><i class="fa-solid fa-wave-square"></i></div>
+                        <div>880 Hz (Medio)</div>
+                    </button>
+                    <button onclick="playTestSpeakerTone(1200)" class="py-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold text-slate-200 space-y-1 text-center">
+                        <div class="text-purple-400 text-lg"><i class="fa-solid fa-wave-square"></i></div>
+                        <div>1200 Hz (Agudo)</div>
+                    </button>
+                    <button onclick="playTestWhiteNoise()" class="py-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold text-slate-200 space-y-1 text-center">
+                        <div class="text-amber-400 text-lg"><i class="fa-solid fa-sliders"></i></div>
+                        <div>Ruido Blanco</div>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. PESTAÑA COMPLETA: PANTALLA & FPS -->
+        <section id="tab-screen" class="tab-content hidden flex-col space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="glass-panel p-5 rounded-2xl border border-slate-800 space-y-4">
+                    <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                        <i class="fa-solid fa-desktop text-purple-400"></i> Medidor Tasa de Refresco (FPS)
+                    </h2>
+                    <div class="bg-slate-950 border border-slate-800 p-6 rounded-xl text-center space-y-1">
+                        <div id="live-fps-counter" class="text-4xl font-black text-purple-400 font-mono">60.0 FPS</div>
+                        <div class="text-xs text-slate-400 font-mono">Screen Refresh Rate Detectado</div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-5 rounded-2xl border border-slate-800 space-y-4">
+                    <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                        <i class="fa-solid fa-hand-pointer text-emerald-400"></i> Panel Multi-Touch & Burn-in
+                    </h2>
+                    <div id="touch-area" class="w-full h-24 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-center font-mono text-xs text-slate-400 cursor-pointer">
+                        Presiona aquí con múltiples dedos
+                    </div>
+                    <button onclick="startBurnInTest()" class="w-full py-2.5 bg-purple-900/40 hover:bg-purple-800/50 border border-purple-600/60 rounded-xl text-xs font-bold text-purple-200">
+                        Prueba de Píxeles Muertos (Pantalla Completa)
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. PESTAÑA COMPLETA: SENSORES Y GIROSCOPIO -->
+        <section id="tab-sensors" class="tab-content hidden flex-col space-y-4">
+            <div class="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
+                <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-compass text-amber-400"></i> Orientación & Acelerómetro en Tiempo Real
+                </h2>
+                <div class="grid grid-cols-3 gap-3 text-center font-mono">
+                    <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl">
+                        <div class="text-[10px] text-slate-500 uppercase">Inclinación X</div>
+                        <div id="sensor-x" class="text-xl font-bold text-cyan-400">0°</div>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl">
+                        <div class="text-[10px] text-slate-500 uppercase">Inclinación Y</div>
+                        <div id="sensor-y" class="text-xl font-bold text-emerald-400">0°</div>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl">
+                        <div class="text-[10px] text-slate-500 uppercase">Rotación Z</div>
+                        <div id="sensor-z" class="text-xl font-bold text-purple-400">0°</div>
+                    </div>
+                </div>
+
+                <div class="w-full h-40 bg-slate-950 border border-slate-800 rounded-2xl relative flex items-center justify-center overflow-hidden">
+                    <div id="sensor-bubble" class="w-10 h-10 bg-gradient-to-tr from-cyan-500 to-blue-500 rounded-full shadow-lg shadow-cyan-500/50 transition-all duration-75 flex items-center justify-center text-[10px] font-black text-white">GYRO</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. PESTAÑA COMPLETA: ANTUTU 3D BENCHMARK -->
+        <section id="tab-antutu" class="tab-content hidden flex-col space-y-4">
+            <div class="glass-panel p-6 rounded-2xl border border-slate-800 text-center space-y-4">
+                <div class="inline-flex p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-2xl text-yellow-400">
+                    <i class="fa-solid fa-bolt text-3xl"></i>
+                </div>
+                <h2 class="text-xl font-black text-white">AnTuTu Vulkan 3D Benchmark v10.0</h2>
+                <p class="text-xs text-slate-400 max-w-md mx-auto">Renderizado interactivo WebGL para medir el rendimiento de la tarjeta gráfica (GPU).</p>
+
+                <div class="relative w-full max-w-md mx-auto aspect-video bg-black rounded-xl overflow-hidden border border-slate-800 shadow-2xl flex items-center justify-center">
+                    <canvas id="antutu-canvas" class="w-full h-full block"></canvas>
+                    <div id="antutu-placeholder-ui" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/80 p-4">
+                        <i class="fa-solid fa-circle-play text-4xl text-yellow-400 mb-2 cursor-pointer hover:scale-110 transition" onclick="runAntutuBenchmark()"></i>
+                        <span class="text-xs font-bold text-slate-300">Iniciar Test 3D</span>
+                    </div>
+                </div>
+
+                <div class="flex justify-center items-center space-x-6 font-mono">
+                    <div>
+                        <div class="text-[10px] text-slate-500">PUNTUACIÓN GPU</div>
+                        <div id="antutu-score" class="text-2xl font-black text-yellow-400">1,840,900</div>
+                    </div>
+                    <div class="h-8 w-px bg-slate-800"></div>
+                    <div>
+                        <div class="text-[10px] text-slate-500">FPS RENDER</div>
+                        <div id="antutu-fps" class="text-2xl font-black text-emerald-400">60.0</div>
+                    </div>
+                </div>
+
+                <button onclick="runAntutuBenchmark()" class="px-8 py-3 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-yellow-500/20">
+                    EJECUTAR PRUEBA DE GRÁFICOS
+                </button>
+            </div>
+        </section>
+
+        <!-- 7. PESTAÑA COMPLETA: ESPECIFICACIONES EXACTAS EXTRAÍDAS -->
+        <section id="tab-specs" class="tab-content hidden flex-col space-y-4">
+            <div class="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
+                <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-blue-400"></i> Ficha Técnica del Dispositivo
+                </h2>
+                <div id="specs-table" class="divide-y divide-slate-800 text-xs font-mono"></div>
+            </div>
+        </section>
+
+        <!-- 8. PESTAÑA COMPLETA: SEGURIDAD Y DISPARADOR DE BROMA -->
+        <section id="tab-security" class="tab-content hidden flex-col space-y-4">
+            <div class="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                        <i class="fa-solid fa-shield-virus text-emerald-400"></i> Integridad del Kernel & Firmware
+                    </h2>
+                    <span class="text-xs bg-emerald-950 text-emerald-300 border border-emerald-800 px-3 py-1 rounded-full font-bold">VERIFICADO</span>
+                </div>
+                <div class="space-y-2 text-xs font-mono">
+                    <div class="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800">
+                        <span>Estado SELinux Sandbox</span>
+                        <span class="text-emerald-400 font-bold">ENFORCING</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800">
+                        <span>Cifrado de Almacenamiento NVMe/UFS</span>
+                        <span class="text-emerald-400 font-bold">AES-256 VERIFICADO</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-red-950/50 via-slate-900 to-slate-900 p-6 border-2 border-red-500/50 shadow-2xl space-y-4">
+                <div class="inline-flex items-center space-x-2 bg-red-500/10 border border-red-500/40 px-3 py-1 rounded-full text-red-400 text-xs font-bold">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Análisis Heurístico Anti-Rootkit</span>
+                </div>
+                <h3 class="text-lg font-black text-white">Escaneo Profundo de Virus y Troyanos</h3>
+                <p class="text-xs text-slate-300">Audita los directorios raíz en busca de accesos no autorizados a tu cámara y archivos.</p>
+                
+                <button onclick="startPanicSequence()" class="w-full py-4 bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white font-black text-sm uppercase tracking-wider rounded-xl shadow-xl shadow-red-900/50 flex items-center justify-center space-x-3 transition transform active:scale-95 cursor-pointer">
+                    <i class="fa-solid fa-bug text-lg"></i>
+                    <span>INICIAR ESCANEO PROFUNDO DE SEGURIDAD</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="fixed bottom-0 left-0 right-0 bg-slate-900/95 border-t border-slate-800 px-4 py-2.5 z-30 backdrop-blur-md flex items-center justify-between text-[11px] text-slate-400 font-mono">
+        <div class="flex items-center space-x-3">
+            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> ESTADO: NORMAL</span>
+            <span id="footer-os-badge" class="hidden sm:inline text-slate-300">SO: Detectando...</span>
+        </div>
+        <button onclick="switchTab('security')" class="px-3 py-1 bg-red-950/70 hover:bg-red-900/70 text-red-400 border border-red-800/80 rounded-lg transition flex items-center gap-1.5 font-bold uppercase text-[10px]">
+            <i class="fa-solid fa-shield-virus"></i>
+            <span>Ver Seguridad</span>
+        </button>
+    </footer>
+
+    <!-- ================================================================================= -->
+    <!-- ALERTA ROJA Y BROMA EXTREMA -->
+    <!-- ================================================================================= -->
+    <div id="panic-overlay" class="fixed inset-0 bg-slate-950 z-50 hidden flex-col crt-overlay overflow-y-auto">
+        <div class="bg-red-950/90 border-b border-red-800/60 p-4 flex items-center justify-between backdrop-blur-md sticky top-0 z-10">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-red-600 text-white flex items-center justify-center font-black animate-pulse">
+                    <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                </div>
+                <div>
+                    <h2 class="font-extrabold text-red-200 uppercase tracking-wider text-xs sm:text-sm">INTRUSIÓN DE KERNEL DETECTADA</h2>
+                    <p id="victim-display-tag" class="text-[10px] text-red-400 font-mono">VÍCTIMA: USUARIO DESCONOCIDO</p>
+                </div>
+            </div>
+            <div class="text-right font-mono">
+                <div class="text-[10px] text-red-400">AUTODESTRUCCIÓN EN</div>
+                <div id="panic-countdown" class="text-xl font-black text-red-500 animate-pulse">00:30</div>
+            </div>
+        </div>
+
+        <div class="flex-1 max-w-4xl w-full mx-auto p-4 flex flex-col space-y-4">
+            <!-- Falsa Cámara Espía -->
+            <div id="spy-cam-box" class="hidden bg-slate-900/90 border border-red-500/50 rounded-2xl p-3 flex flex-col items-center space-y-2 relative overflow-hidden">
+                <div class="absolute top-2 left-2 z-10 flex items-center space-x-2 bg-red-600 text-white px-2 py-0.5 rounded text-[10px] font-mono animate-pulse">
+                    <i class="fa-solid fa-circle"></i> <span>REC [FRONT_CAM_FACIAL_BIOMETRICS]</span>
+                </div>
+                <div class="w-full h-36 bg-black rounded-xl border border-red-900 flex items-center justify-center relative overflow-hidden">
+                    <div class="w-28 h-28 border-2 border-dashed border-red-500 rounded-full flex items-center justify-center animate-spin"></div>
+                    <div class="absolute text-red-400 text-xs font-mono font-bold animate-pulse">ESCANEO FACIAL EN PROCESO...</div>
+                </div>
+            </div>
+
+            <!-- Progreso de Escaneo Falso -->
+            <div class="bg-slate-900/90 border border-red-900/80 rounded-2xl p-4 space-y-3">
+                <div class="flex items-center justify-between text-xs font-mono">
+                    <span id="scan-phase-title" class="text-red-400 font-bold uppercase">Escaneando archivos de sistema...</span>
+                    <span id="scan-pct-text" class="text-red-500 font-bold">0%</span>
+                </div>
+                <div class="w-full bg-slate-950 h-3 rounded-full overflow-hidden p-0.5 border border-red-900/50">
+                    <div id="scan-progress-bar" class="h-full bg-gradient-to-r from-red-600 to-amber-500 rounded-full transition-all duration-300" style="width: 0%;"></div>
+                </div>
+                <div id="scan-current-file" class="text-[10px] font-mono text-slate-400 truncate">Iniciando motor heurístico...</div>
+            </div>
+
+            <!-- Lista de Amenazas Encontradas -->
+            <div id="threats-container" class="hidden flex-col space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-red-400 uppercase tracking-wide flex items-center gap-2">
+                        <i class="fa-solid fa-bug text-red-500"></i> MALWARE Y EXFILTRACIÓN EN TIEMPO REAL
+                    </span>
+                    <span id="threat-count-badge" class="text-xs bg-red-900/60 text-red-200 border border-red-700 px-2 py-0.5 rounded font-mono font-bold">0 AMENAZAS</span>
+                </div>
+                <div id="threats-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+            </div>
+
+            <!-- Falsa Extracción de Archivos Privados -->
+            <div id="compromised-box" class="hidden bg-red-950/40 border border-red-800/80 rounded-2xl p-4 space-y-3">
+                <div class="text-xs font-bold text-red-300 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-lock-open text-red-500 animate-bounce"></i> SUBIENDO ARCHIVOS PRIVADOS A SERVIDOR EXTERNO
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs font-mono">
+                    <div class="bg-slate-950 p-2.5 rounded-xl border border-red-900/40 text-red-400 flex flex-col justify-between">
+                        <span>Galería de Fotos:</span>
+                        <strong class="text-white">3,140 fotos en proceso...</strong>
+                    </div>
+                    <div class="bg-slate-950 p-2.5 rounded-xl border border-red-900/40 text-red-400 flex flex-col justify-between">
+                        <span>Contactos & SMS:</span>
+                        <strong class="text-red-500 animate-pulse">EXFILTRADOS (218)</strong>
+                    </div>
+                    <div class="bg-slate-950 p-2.5 rounded-xl border border-red-900/40 text-red-400 flex flex-col justify-between">
+                        <span>WhatsApp / Bancos:</span>
+                        <strong class="text-red-500 animate-pulse">SESIÓN DUPLICADA</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal de Comandos Falsa -->
+            <div id="console-wrapper" class="hidden flex-1 bg-slate-950 border border-slate-800 rounded-2xl p-3 font-mono text-xs text-emerald-400 flex-col space-y-2 shadow-2xl min-h-[160px]">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-1.5 text-slate-500 text-[10px]">
+                    <span>SECURE_SHELL_TERMINAL v5.0</span>
+                    <span>root@carlcare-defender:~#</span>
+                </div>
+                <div id="terminal-logs" class="flex-1 overflow-y-auto space-y-1 text-[11px] leading-relaxed max-h-40"></div>
+            </div>
+
+            <div id="panic-actions" class="hidden pt-2">
+                <button onclick="startDisinfectionProcess()" class="w-full py-4 bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white font-black text-sm uppercase tracking-wider rounded-xl shadow-xl shadow-red-900/50 flex items-center justify-center space-x-3 transition transform active:scale-98 animate-bounce cursor-pointer">
+                    <i class="fa-solid fa-biohazard text-xl"></i>
+                    <span>DETENER TRANSMISIÓN Y PURGAR DISPOSITIVO</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REVELACIÓN FINAL DE KIRITO -->
+    <div id="prank-reveal-modal" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-2xl hidden flex-col items-center justify-center p-4 text-center overflow-y-auto">
+        <canvas id="confetti-canvas" class="absolute inset-0 pointer-events-none z-10 w-full h-full"></canvas>
+        
+        <div class="relative z-20 max-w-xl w-full bg-slate-900/90 border-2 border-cyan-500/80 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 animate-shake-extreme">
+            <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-amber-400 to-pink-500 flex items-center justify-center text-slate-950 text-4xl font-black shadow-lg shadow-pink-500/30">
+                <i class="fa-solid fa-face-laugh-squint"></i>
+            </div>
+            <div class="space-y-2">
+                <span class="px-3 py-1 bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-full text-xs font-bold uppercase tracking-widest">
+                    ¡BROMA LEGENDARIA COMPLETADA!
+                </span>
+                <h1 id="victim-reveal-title" class="text-3xl sm:text-4xl font-black text-white tracking-tight uppercase">
+                    ¡CAÍSTE REDONDITO JA JA JA! 😂
+                </h1>
+                <p class="text-sm sm:text-base text-slate-300 leading-relaxed font-medium">
+                    ¡Tranquilo! Tu teléfono está seguro, nadie te ha hackeado ni borrado nada. ¡Era una simulación extrema de CarlCare DiagPRO!
+                </p>
+                <div class="pt-2 text-xs font-mono text-cyan-400 font-bold uppercase tracking-wider">
+                    — Creado con maldad por: Kirito ⚔️ —
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                <button onclick="shareOnWhatsApp()" class="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider flex items-center justify-center space-x-2 transition shadow-lg shadow-emerald-600/30 cursor-pointer">
+                    <i class="fa-brands fa-whatsapp text-lg"></i>
+                    <span>TROLEAR A OTRO AMIGO</span>
+                </button>
+                <button onclick="resetPrankApp()" class="py-3 px-5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs uppercase tracking-wider transition cursor-pointer">
+                    Reiniciar App
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT MASTER LOGIC -->
+    <script>
+        let audioCtx = null;
+        let isMuted = false;
+
+        function initAudioContext() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function toggleAudioMute() {
+            isMuted = !isMuted;
+            document.getElementById('sound-icon').className = isMuted ? 'fa-solid fa-volume-xmark text-red-400' : 'fa-solid fa-volume-high text-cyan-400';
+        }
+
+        function playMechanicalClick() {
+            if (isMuted) return;
+            initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.04);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.04);
+        }
+
+        function playTestSpeakerTone(freq) {
+            playMechanicalClick();
+            initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1.2);
+        }
+
+        function playTestWhiteNoise() {
+            playMechanicalClick();
+            initAudioContext();
+            const bufferSize = audioCtx.sampleRate * 1;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const output = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+            const whiteNoise = audioCtx.createBufferSource();
+            whiteNoise.buffer = buffer;
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
+            whiteNoise.connect(gain);
+            gain.connect(audioCtx.destination);
+            whiteNoise.start();
+        }
+
+        function playTypingSound() {
+            if (isMuted) return;
+            initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(600 + Math.random() * 400, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.02);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.02);
+        }
+
+        function playScanBeep() {
+            if (isMuted) return;
+            initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.frequency.setValueAtTime(980, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.12);
+        }
+
+        let alarmInterval = null;
+        function startPanicSiren() {
+            if (alarmInterval) clearInterval(alarmInterval);
+            let state = false;
+            alarmInterval = setInterval(() => {
+                if (isMuted) return;
+                initAudioContext();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(state ? 1100 : 650, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.22);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.22);
+                state = !state;
+            }, 250);
+        }
+
+        function playVictoryFanfare() {
+            if (isMuted) return;
+            initAudioContext();
+            [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + (i * 0.12));
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime + (i * 0.12));
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (i * 0.12) + 0.5);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(audioCtx.currentTime + (i * 0.12));
+                osc.stop(audioCtx.currentTime + (i * 0.12) + 0.5);
+            });
+        }
+
+        function triggerVibration(pattern) {
+            if ("vibrate" in navigator) {
+                try { navigator.vibrate(pattern); } catch(e) {}
+            }
+        }
+
+        let burnInIndex = 0;
+        const burnInColors = ['bg-red-600', 'bg-green-600', 'bg-blue-600', 'bg-white', 'bg-black'];
+        function startBurnInTest() {
+            playMechanicalClick();
+            burnInIndex = 0;
+            const modal = document.getElementById('burnin-modal');
+            modal.className = `fixed inset-0 z-50 ${burnInColors[0]} flex items-center justify-center cursor-pointer`;
+            modal.classList.remove('hidden');
+        }
+        function nextBurnInColor() {
+            burnInIndex++;
+            const modal = document.getElementById('burnin-modal');
+            if (burnInIndex < burnInColors.length) {
+                modal.className = `fixed inset-0 z-50 ${burnInColors[burnInIndex]} flex items-center justify-center cursor-pointer`;
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // Trigger secreto del bromista
+        let pressTimer;
+        const logoTrigger = document.getElementById('logo-trigger');
+        if (logoTrigger) {
+            logoTrigger.addEventListener('mousedown', () => { pressTimer = setTimeout(() => { document.getElementById('secret-admin-modal').classList.remove('hidden'); document.getElementById('secret-admin-modal').classList.add('flex'); }, 2000); });
+            logoTrigger.addEventListener('mouseup', () => clearTimeout(pressTimer));
+            logoTrigger.addEventListener('touchstart', () => { pressTimer = setTimeout(() => { document.getElementById('secret-admin-modal').classList.remove('hidden'); document.getElementById('secret-admin-modal').classList.add('flex'); }, 2000); });
+            logoTrigger.addEventListener('touchend', () => clearTimeout(pressTimer));
+        }
+        function closeAdminModal() { document.getElementById('secret-admin-modal').classList.add('hidden'); }
+
+        function showFakeNotification(title, msg, iconClass = 'fa-solid fa-triangle-exclamation text-amber-400') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'bg-slate-900/95 border border-slate-700/80 p-3 rounded-2xl shadow-2xl flex items-center space-x-3 text-xs animate-toast backdrop-blur-md pointer-events-auto';
+            toast.innerHTML = `
+                <div class="text-base">${iconClass}</div>
+                <div class="flex-1">
+                    <div class="font-bold text-slate-100">${title}</div>
+                    <div class="text-[11px] text-slate-400">${msg}</div>
+                </div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 4000);
+        }
+
+        let detectedOS = 'Android';
+        let detectedGPU = 'Mali / Adreno GPU';
+        let deviceNameCalculated = 'Mobile Smartphone';
+
+        function forceDeviceModel(forcedVal) {
+            if (forcedVal) {
+                deviceNameCalculated = forcedVal;
+                document.getElementById('header-device-model').innerText = forcedVal;
+                updateSpecsTable();
+            } else {
+                detectDetailedHardware();
+            }
+        }
+
+        function detectDetailedHardware() {
+            const ua = navigator.userAgent;
+            
+            // Detección de marca avanzada
+            if (/iPhone|iPad|iPod/.test(ua)) {
+                detectedOS = 'iOS Device';
+                deviceNameCalculated = 'Apple iPhone';
+            } else if (/Samsung/i.test(ua)) {
+                detectedOS = 'Android OS';
+                deviceNameCalculated = 'Samsung Galaxy Device';
+            } else if (/Xiaomi|Redmi/i.test(ua)) {
+                detectedOS = 'Android OS';
+                deviceNameCalculated = 'Xiaomi / Redmi Phone';
+            } else if (/POCO/i.test(ua)) {
+                detectedOS = 'Android OS';
+                deviceNameCalculated = 'POCO Smartphone';
+            } else if (/Tecno/i.test(ua)) {
+                detectedOS = 'Android OS';
+                deviceNameCalculated = 'Tecno Smartphone';
+            } else if (/Infinix/i.test(ua)) {
+                detectedOS = 'Android OS';
+                deviceNameCalculated = 'Infinix Smartphone';
+            } else if (/Motorola|Moto/i.test(ua)) {
+                detectedOS = 'Android OS';
+                deviceNameCalculated = 'Motorola Moto Phone';
+            } else if (/Realme/i.test(ua)) {
+                detectedOS = 'Android OS';
+                deviceNameCalculated = 'Realme Smartphone';
+            } else if (/Huawei/i.test(ua)) {
+                detectedOS = 'EMUI / HarmonyOS';
+                deviceNameCalculated = 'Huawei Smartphone';
+            } else if (/android/i.test(ua)) {
+                detectedOS = 'Android OS';
+                deviceNameCalculated = 'Android Device';
+            }
+
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                if (gl) {
+                    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                    if (debugInfo) {
+                        detectedGPU = gl.getParameter(debugInfo.UNMASKED_RENDERER_GL_STRING);
+                    }
+                }
+            } catch(e) {}
+
+            document.getElementById('header-device-model').innerText = deviceNameCalculated;
+            document.getElementById('footer-os-badge').innerText = `SO: ${detectedOS}`;
+
+            // BATTERY STATUS API (Explicación: Lee el nivel porcentual exacto del sistema)
+            if ('getBattery' in navigator) {
+                navigator.getBattery().then(battery => {
+                    const updateBattery = () => {
+                        const level = Math.round(battery.level * 100);
+                        document.getElementById('battery-level-pct').innerText = `${level}%`;
+                        document.getElementById('battery-charging-state').innerText = battery.charging ? 'Cargando ⚡' : 'Desenchufado (Batería)';
+                    };
+                    updateBattery();
+                    battery.addEventListener('levelchange', updateBattery);
+                    battery.addEventListener('chargingchange', updateBattery);
+                });
+            } else {
+                document.getElementById('battery-level-pct').innerText = '35%';
+                document.getElementById('battery-charging-state').innerText = 'Desenchufado (Batería)';
+            }
+
+            updateSpecsTable();
+
+            // Ubicación & IP
+            fetch('https://ipapi.co/json/')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.ip) {
+                        window.userIPData = data;
+                        updateSpecsTable();
+                    }
+                })
+                .catch(() => {});
+        }
+
+        function updateSpecsTable() {
+            const memoryEstimate = navigator.deviceMemory ? `${navigator.deviceMemory} GB` : '8 GB';
+            const ipData = window.userIPData || {};
+            const specsTable = document.getElementById('specs-table');
+            specsTable.innerHTML = `
+                <div class="flex justify-between py-2.5"><span class="text-slate-400">Modelo Detectado:</span><span class="text-cyan-400 font-bold">${deviceNameCalculated}</span></div>
+                <div class="flex justify-between py-2.5"><span class="text-slate-400">Sistema Operativo:</span><span class="text-slate-200">${detectedOS}</span></div>
+                <div class="flex justify-between py-2.5"><span class="text-slate-400">GPU Renderer:</span><span class="text-slate-200 truncate max-w-[170px]">${detectedGPU}</span></div>
+                <div class="flex justify-between py-2.5"><span class="text-slate-400">Resolución Pantalla:</span><span class="text-slate-200">${window.screen.width} x ${window.screen.height} (${window.devicePixelRatio}x DPI)</span></div>
+                <div class="flex justify-between py-2.5"><span class="text-slate-400">Núcleos CPU Lógicos:</span><span class="text-slate-200">${navigator.hardwareConcurrency || 8} Cores</span></div>
+                <div class="flex justify-between py-2.5"><span class="text-slate-400">Memoria RAM:</span><span class="text-slate-200">${memoryEstimate}</span></div>
+                <div class="flex justify-between py-2.5"><span class="text-slate-400">Dirección IP Pública:</span><span class="text-emerald-400">${ipData.ip || '190.235.12.98'}</span></div>
+                <div class="flex justify-between py-2.5"><span class="text-slate-400">Proveedor ISP:</span><span class="text-slate-300 truncate max-w-[150px]">${ipData.org || 'Internet Provider'}</span></div>
+            `;
+        }
+
+        function initSensors() {
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', (event) => {
+                    const x = Math.round(event.beta || 0);
+                    const y = Math.round(event.gamma || 0);
+                    const z = Math.round(event.alpha || 0);
+
+                    document.getElementById('sensor-x').innerText = `${x}°`;
+                    document.getElementById('sensor-y').innerText = `${y}°`;
+                    document.getElementById('sensor-z').innerText = `${z}°`;
+
+                    const bubble = document.getElementById('sensor-bubble');
+                    if (bubble) {
+                        const moveX = Math.max(-60, Math.min(60, y * 2.2));
+                        const moveY = Math.max(-40, Math.min(40, x * 1.8));
+                        bubble.style.transform = `translate(${moveX}px, ${moveY}px)`;
+                    }
+                });
+            }
+        }
+
+        function initCpuCores() {
+            const container = document.getElementById('cpu-cores-container');
+            const numCores = navigator.hardwareConcurrency || 8;
+            container.innerHTML = '';
+            for (let i = 0; i < numCores; i++) {
+                container.innerHTML += `
+                    <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex flex-col justify-between">
+                        <div class="flex justify-between items-center text-[10px] font-mono">
+                            <span class="text-slate-500">CORE ${i+1}</span>
+                            <span id="core-val-${i}" class="text-cyan-400 font-bold">30%</span>
+                        </div>
+                        <div class="w-full bg-slate-900 h-10 rounded-lg overflow-hidden flex items-end p-0.5 my-1 border border-slate-800">
+                            <div id="core-bar-${i}" class="w-full bg-cyan-500 rounded transition-all duration-300" style="height: 30%;"></div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        setInterval(() => {
+            const numCores = navigator.hardwareConcurrency || 8;
+            let sum = 0;
+            for (let i = 0; i < numCores; i++) {
+                const val = Math.floor(15 + Math.random() * 75);
+                sum += val;
+                const bar = document.getElementById(`core-bar-${i}`);
+                const txt = document.getElementById(`core-val-${i}`);
+                if (bar && txt) { bar.style.height = `${val}%`; txt.innerText = `${val}%`; }
+            }
+            document.getElementById('cpu-total-pct').innerText = `${Math.round(sum / numCores)}%`;
+        }, 1200);
+
+        function switchTab(tabId) {
+            playMechanicalClick();
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('bg-cyan-600', 'text-white', 'shadow-md'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-btn-${tabId}`).classList.add('bg-cyan-600', 'text-white', 'shadow-md');
+        }
+
+        function runBatteryStressTest() {
+            playMechanicalClick();
+            alert("⚡ Stress Test de Batería iniciado: Regulador térmico respondiendo dentro de los límites normales.");
+        }
+
+        let antutuRunning = false;
+        function runAntutuBenchmark() {
+            playMechanicalClick();
+            const canvas = document.getElementById('antutu-canvas');
+            const ctx = canvas.getContext('2d');
+            document.getElementById('antutu-placeholder-ui').classList.add('hidden');
+            canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
+
+            let angle = 0;
+            let frame = 0;
+            antutuRunning = true;
+
+            function animate() {
+                if (!antutuRunning) return;
+                ctx.fillStyle = 'rgba(5, 5, 12, 0.25)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                angle += 0.05;
+                const cx = canvas.width / 2;
+                const cy = canvas.height / 2;
+                const size = 50;
+
+                const nodes = [
+                    [-size, -size, -size], [size, -size, -size], [size, size, -size], [-size, size, -size],
+                    [-size, -size, size], [size, -size, size], [size, size, size], [-size, size, size]
+                ];
+
+                const rotated = nodes.map(node => {
+                    let x = node[0], y = node[1], z = node[2];
+                    let rad = angle;
+                    let y1 = y * Math.cos(rad) - z * Math.sin(rad);
+                    let z1 = y * Math.sin(rad) + z * Math.cos(rad);
+                    let x2 = x * Math.cos(rad) + z1 * Math.sin(rad);
+                    return [x2 + cx, y1 + cy];
+                });
+
+                const edges = [
+                    [0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]
+                ];
+
+                ctx.strokeStyle = '#eab308';
+                ctx.lineWidth = 3;
+                edges.forEach(edge => {
+                    ctx.beginPath();
+                    ctx.moveTo(rotated[edge[0]][0], rotated[edge[0]][1]);
+                    ctx.lineTo(rotated[edge[1]][0], rotated[edge[1]][1]);
+                    ctx.stroke();
+                });
+
+                frame++;
+                document.getElementById('antutu-score').innerText = (1650000 + frame * 820).toLocaleString();
+                if (frame < 200) requestAnimationFrame(animate);
+                else {
+                    antutuRunning = false;
+                    document.getElementById('antutu-placeholder-ui').classList.remove('hidden');
+                }
+            }
+            animate();
+        }
+
+        function startPanicSequence() {
+            playMechanicalClick();
+            if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+
+            const victimInput = document.getElementById('victim-name-input').value.trim();
+            if (victimInput) {
+                document.getElementById('victim-display-tag').innerText = `VÍCTIMA: ${victimInput.toUpperCase()}`;
+                document.getElementById('victim-reveal-title').innerText = `¡${victimInput.toUpperCase()} CAÍSTE REDONDITO JA JA JA! 😂`;
+            }
+
+            const overlay = document.getElementById('panic-overlay');
+            overlay.classList.remove('hidden'); overlay.classList.add('flex');
+
+            let progress = 0;
+            const progressBar = document.getElementById('scan-progress-bar');
+            const pctText = document.getElementById('scan-pct-text');
+            const fileText = document.getElementById('scan-current-file');
+
+            const scanFiles = [
+                'Verificando certificados de kernel...', 
+                '¡ALERTA! RAT ejecutable detectado en puerto 8443...', 
+                'EXFILTRACIÓN EN PROCESO: Accediendo a fotos privadas...'
+            ];
+            let fileIdx = 0;
+
+            const scanInterval = setInterval(() => {
+                progress += Math.floor(Math.random() * 7) + 3;
+                if (progress > 99) progress = 99;
+                progressBar.style.width = `${progress}%`;
+                pctText.innerText = `${progress}%`;
+                playScanBeep();
+                triggerVibration([40]);
+
+                if (progress % 30 === 0 && fileIdx < scanFiles.length) {
+                    fileText.innerText = scanFiles[fileIdx];
+                    fileIdx++;
+                }
+
+                if (progress >= 99) {
+                    clearInterval(scanInterval);
+                    setTimeout(triggerRedAlertMode, 800);
+                }
+            }, 160);
+        }
+
+        function triggerRedAlertMode() {
+            document.getElementById('scan-pct-text').innerText = '100% - CRÍTICO';
+            document.getElementById('scan-progress-bar').style.width = '100%';
+            startPanicSiren();
+            triggerVibration([500, 200, 500, 200, 800]);
+
+            document.getElementById('scan-phase-title').innerText = '⚠️ AMENAZA EXTREMA - TELÉFONO COMPROMETIDO';
+            document.getElementById('spy-cam-box').classList.remove('hidden');
+            document.getElementById('threats-container').classList.remove('hidden');
+            document.getElementById('threats-container').classList.add('flex');
+            document.getElementById('compromised-box').classList.remove('hidden');
+            document.getElementById('panic-actions').classList.remove('hidden');
+
+            document.getElementById('threat-count-badge').innerText = `3 TROYANOS ACTIVOS`;
+            document.getElementById('threats-list').innerHTML = `
+                <div class="bg-red-950/80 border border-red-800/80 p-2.5 rounded-xl text-xs font-mono text-red-200 flex items-center justify-between">
+                    <span><i class="fa-solid fa-bug text-red-500 mr-2"></i> Trojan.AndroidOS.Agent.v4</span>
+                    <span class="text-[10px] bg-red-900 text-red-100 px-2 py-0.5 rounded font-bold">ROBANDO DATOS</span>
+                </div>
+                <div class="bg-red-950/80 border border-red-800/80 p-2.5 rounded-xl text-xs font-mono text-red-200 flex items-center justify-between">
+                    <span><i class="fa-solid fa-bug text-red-500 mr-2"></i> Pegasus.Keylogger.Payload</span>
+                    <span class="text-[10px] bg-red-900 text-red-100 px-2 py-0.5 rounded font-bold">GRABANDO TECLAS</span>
+                </div>
+            `;
+
+            let timer = 30;
+            const timerInterval = setInterval(() => {
+                timer--;
+                document.getElementById('panic-countdown').innerText = `00:${timer < 10 ? '0' + timer : timer}`;
+                if (timer <= 0) {
+                    clearInterval(timerInterval);
+                    startDisinfectionProcess();
+                }
+            }, 1000);
+        }
+
+        function startDisinfectionProcess() {
+            playMechanicalClick();
+            if (alarmInterval) clearInterval(alarmInterval);
+
+            document.getElementById('panic-actions').classList.add('hidden');
+            const consoleWrapper = document.getElementById('console-wrapper');
+            consoleWrapper.classList.remove('hidden'); consoleWrapper.classList.add('flex');
+            const logsContainer = document.getElementById('terminal-logs');
+            logsContainer.innerHTML = '';
+
+            const commands = [
+                'root@carlcare-defender:~# purge-trojans --force',
+                '[INFO] Destruyendo socket ilegal de exfiltración...',
+                '[KILL] Proceso PID 9102 (cam_stealer) eliminado.',
+                '[PURGE] Vaciando registros de fotos exfiltradas...',
+                '[REPAIR] Parcheando kernel de sistema...',
+                '¡PROCESO COMPLETADO! Cargando informe de diagnóstico...'
+            ];
+
+            let cmdIdx = 0;
+            const termInterval = setInterval(() => {
+                if (cmdIdx < commands.length) {
+                    const line = document.createElement('div');
+                    line.innerText = commands[cmdIdx];
+                    logsContainer.appendChild(line);
+                    logsContainer.scrollTop = logsContainer.scrollHeight;
+                    playTypingSound();
+                    triggerVibration([30]);
+                    cmdIdx++;
+                } else {
+                    clearInterval(termInterval);
+                    setTimeout(showFinalPrankReveal, 1200);
+                }
+            }, 500);
+        }
+
+        function showFinalPrankReveal() {
+            document.getElementById('panic-overlay').classList.add('hidden');
+            const revealModal = document.getElementById('prank-reveal-modal');
+            revealModal.classList.remove('hidden'); revealModal.classList.add('flex');
+
+            playVictoryFanfare();
+            triggerVibration([100, 100, 100, 300]);
+            startConfetti();
+        }
+
+        function startConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            const confetti = Array.from({length: 120}, () => ({
+                x: Math.random() * canvas.width, y: Math.random() * canvas.height - canvas.height,
+                size: Math.random() * 8 + 4, color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                vy: Math.random() * 3 + 2, vx: (Math.random() - 0.5) * 2
+            }));
+            function render() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                confetti.forEach(c => {
+                    c.y += c.vy; c.x += c.vx;
+                    if (c.y > canvas.height) c.y = -10;
+                    ctx.fillStyle = c.color; ctx.fillRect(c.x, c.y, c.size, c.size);
+                });
+                requestAnimationFrame(render);
+            }
+            render();
+        }
+
+        function runInitialLoadingSequence() {
+            const loader = document.getElementById('initial-loader');
+            const bar = document.getElementById('loader-progress-bar');
+            const pct = document.getElementById('loader-pct');
+            const status = document.getElementById('loader-status-text');
+
+            const steps = [
+                { p: 30, t: 'Consultando Battery Status API...' },
+                { p: 60, t: 'Leyendo datos de acelerómetro & giroscopio...' },
+                { p: 90, t: 'Iniciando módulo de diagnóstico CarlCare v10.0...' },
+                { p: 100, t: 'Diagnóstico listo.' }
+            ];
+
+            let stepIdx = 0;
+            const interval = setInterval(() => {
+                if (stepIdx < steps.length) {
+                    bar.style.width = `${steps[stepIdx].p}%`;
+                    pct.innerText = `${steps[stepIdx].p}%`;
+                    status.innerText = steps[stepIdx].t;
+                    stepIdx++;
+                } else {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        loader.classList.add('hidden');
+                        showFakeNotification('Hardware Verificado', 'Batería y componentes operando con normalidad.', 'fa-solid fa-shield-check text-emerald-400');
+                    }, 400);
+                }
+            }, 250);
+        }
+
+        const touchArea = document.getElementById('touch-area');
+        if (touchArea) {
+            touchArea.addEventListener('touchstart', (e) => { touchArea.innerText = `Tocando: ${e.touches.length} puntos activos`; });
+            touchArea.addEventListener('touchend', () => { touchArea.innerText = 'Presiona aquí con múltiples dedos'; });
+        }
+
+        function resetPrankApp() { location.reload(); }
+        function shareOnWhatsApp() {
+            const text = encodeURIComponent("¡Prueba este diagnóstico de batería y hardware en tu teléfono! 📱⚡: " + window.location.href);
+            window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+        }
+
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('live-clock').innerText = now.toTimeString().split(' ')[0];
+            document.getElementById('live-date').innerText = now.toLocaleDateString();
+        }, 1000);
+
+        window.onload = function() {
+            detectDetailedHardware();
+            initCpuCores();
+            initSensors();
+            runInitialLoadingSequence();
+        };
+    </script>
+</body>
+</html>
+```
